@@ -57,3 +57,17 @@ jobs:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
+
+    - name: Capture private key from Terraform
+      id: tf
+      run: |
+      echo "PRIVATE_KEY=$(terraform output -raw private_key)" >> $GITHUB_ENV
+
+    - name: Save private key artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ec2-private-key
+        path: private_key.pem
+      run: |
+        echo "$PRIVATE_KEY" > private_key.pem
+        chmod 600 private_key.pem
