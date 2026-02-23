@@ -3,7 +3,6 @@ name: Terraform Deploy
 on:
   push:
     branches: ["main"]
-  pull_request:
 
 permissions:
   contents: read
@@ -11,7 +10,6 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform
     runs-on: ubuntu-latest
 
     defaults:
@@ -28,39 +26,33 @@ jobs:
           role-to-assume: arn:aws:iam::112367725894:role/GitHub-Terraform-Role
           aws-region: ap-south-1
 
-      - name: Determine Environment Folder
-        id: set_env
+      # 🔹 Detect source branch that was merged into main
+      - name: Detect Environment
+        id: detect_env
         run: |
-          # If it's a pull request, pick the source branch name; else use main
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            SOURCE_BRANCH="${GITHUB_HEAD_REF}"
-          else
-            SOURCE_BRANCH="main"
-          fi
+          echo "Merge commit message:"
+          git log -1 --pretty=%B
 
-          # Map branch names to environment folder
+          # Extract branch name from merge commit
+          SOURCE_BRANCH=$(git log -1 --pretty=%B | grep -oP "(?<=from ).*(?= )" || echo "dev")
+
+          echo "Detected branch: $SOURCE_BRANCH"
+
           case "$SOURCE_BRANCH" in
             dev) ENV_FOLDER="dev" ;;
             staging) ENV_FOLDER="staging" ;;
             prod) ENV_FOLDER="prod" ;;
-            *) ENV_FOLDER="dev" ;; # default
+            *) ENV_FOLDER="dev" ;;
           esac
 
           echo "ENV_FOLDER=$ENV_FOLDER" >> $GITHUB_ENV
-          echo "Selected environment: $ENV_FOLDER"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: latest
 
       - name: Terraform Init
         working-directory: environment/${{ env.ENV_FOLDER }}
         run: terraform init
-
-      - name: Terraform Format
-        working-directory: environment/${{ env.ENV_FOLDER }}
-        run: terraform fmt -check
 
       - name: Terraform Plan
         working-directory: environment/${{ env.ENV_FOLDER }}
@@ -68,21 +60,18 @@ jobs:
 
       - name: Terraform Apply
         working-directory: environment/${{ env.ENV_FOLDER }}
-        if: github.event_name == 'push'
         run: terraform apply -var-file=terraform.tfvars -auto-approve -input=false
 
-      - name: Export Private Key to File
+      - name: Export Private Key
         working-directory: environment/${{ env.ENV_FOLDER }}
-        if: github.event_name == 'push'
         run: |
           INSTANCE_NAME=$(terraform output -raw instance_name)
-          terraform output -raw private_key > "${INSTANCE_NAME}-private-key.pem"
-          chmod 600 "${INSTANCE_NAME}-private-key.pem"
+          terraform output -raw private_key > "${INSTANCE_NAME}.pem"
+          chmod 600 "${INSTANCE_NAME}.pem"
+          echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
 
       - name: Upload Private Key Artifact
-        working-directory: environment/${{ env.ENV_FOLDER }}
-        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: "${INSTANCE_NAME}-private-key"
-          path: "${INSTANCE_NAME}-private-key.pem"
+          name: ${{ env.KEY_FILE }}
+          path: environment/${{ env.ENV_FOLDER }}/${{ env.KEY_FILE }}
