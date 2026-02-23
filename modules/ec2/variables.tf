@@ -27,3 +27,9 @@ variable "security_group_name" {
   description = "Name for EC2 Security Group"
   type        = string
 }
+
+variable "allowed_ssh_cidr" {
+  description = "CIDR allowed to SSH"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
