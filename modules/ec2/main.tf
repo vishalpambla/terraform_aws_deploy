@@ -40,11 +40,3 @@ resource "aws_instance" "ec2" {
   depends_on             = [aws_security_group.ec2_sg]
   tags                   = { Name = var.instance_name }
 }
-
-
-# Output the private key to use in CI/CD
-output "private_key" {
-  description = "Private key content for SSH access"
-  value       = tls_private_key.generated.private_key_pem
-  sensitive   = true
-}
