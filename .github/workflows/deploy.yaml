@@ -55,7 +55,7 @@ jobs:
 
       - name: Upload Private Key Artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ec2-private-key
           path: private_key.pem
