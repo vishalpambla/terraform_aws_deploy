@@ -22,3 +22,12 @@ module "ec2" {
   key_name            = var.key_name
   security_group_name = var.security_group_name
 }
+
+output "instance_name" {
+  value = module.ec2.instance_name
+}
+
+output "private_key" {
+  value     = module.ec2.private_key
+  sensitive = true
+}
