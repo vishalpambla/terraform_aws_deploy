@@ -64,11 +64,12 @@ jobs:
 
       - name: Export Private Key
         working-directory: environment/${{ env.ENV_FOLDER }}
+        shell: bash
         run: |
           set -euo pipefail
 
           for i in {1..10}; do
-            INSTANCE_NAME=$(terraform output -raw instance_name || true)
+            INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null || true)
             if [ -n "$INSTANCE_NAME" ]; then
               break
             fi
