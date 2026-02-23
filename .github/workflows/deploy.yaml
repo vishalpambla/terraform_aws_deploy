@@ -72,15 +72,15 @@ jobs:
             if [ -n "$INSTANCE_NAME" ]; then
               break
             fi
-            echo "Instance name not ready yet. Retrying in 10s..."
-            sleep 5
+              echo "Instance name not ready yet. Retrying in 10s..."
+            sleep 10
           done
 
           if [ -z "$INSTANCE_NAME" ]; then
             echo "ERROR: Terraform instance_name output is still empty"
-            exit 1
+          exit 1
           fi
-          
+
           terraform output -raw private_key > "${INSTANCE_NAME}.pem"
           chmod 600 "${INSTANCE_NAME}.pem"
           echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
