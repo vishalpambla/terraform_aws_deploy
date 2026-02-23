@@ -9,13 +9,16 @@ module "vpc" {
   public_subnets     = var.public_subnets
   private_subnets    = var.private_subnets
   availability_zones = var.availability_zones
-  vpc_name           = "dev-vpc"
+  env                = var.env
 }
 
 module "ec2" {
   source = "../../modules/ec2"
 
-  instance_type = var.instance_type
-  subnet_id     = module.vpc.public_subnet_ids[0]
-  instance_name = "dev-instance"
+  instance_name       = var.instance_name
+  instance_type       = var.instance_type
+  subnet_id           = module.vpc.public_subnet_ids[0] # better than hardcoding
+  ami                 = var.ami
+  key_name            = var.key_name
+  security_group_name = var.security_group_name
 }
