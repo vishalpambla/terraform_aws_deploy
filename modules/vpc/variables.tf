@@ -1,5 +1,10 @@
 variable "vpc_cidr" {}
-variable "vpc_name" {}
+
 variable "public_subnets" { type = list(string) }
 variable "private_subnets" { type = list(string) }
 variable "availability_zones" { type = list(string) }
+
+variable "env" {
+  description = "Environment name"
+  type        = string
+}
