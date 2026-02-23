@@ -64,27 +64,33 @@ jobs:
 
       - name: Export Private Key
         working-directory: environment/${{ env.ENV_FOLDER }}
-        shell: bash
-        run: |
-          set -euo pipefail
+  shell: bash
+  run: |
+    set -euo pipefail
 
-          for i in {1..10}; do
-            INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null || true)
-            if [ -n "$INSTANCE_NAME" ]; then
-              break
-            fi
-              echo "Instance name not ready yet. Retrying in 10s..."
-            sleep 10
-          done
+    echo "Waiting for Terraform outputs..."
 
-          if [ -z "$INSTANCE_NAME" ]; then
-            echo "ERROR: Terraform instance_name output is still empty"
-          exit 1
-          fi
+    INSTANCE_NAME=""
+    for i in {1..10}; do
+      INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null || true)
+      if [ -n "$INSTANCE_NAME" ]; then
+        echo "Found instance: $INSTANCE_NAME"
+        break
+      fi
+      echo "Instance name not ready yet. Retrying in 10s..."
+      sleep 10
+    done
 
-          terraform output -raw private_key > "${INSTANCE_NAME}.pem"
-          chmod 600 "${INSTANCE_NAME}.pem"
-          echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
+    if [ -z "$INSTANCE_NAME" ]; then
+      echo "ERROR: Terraform instance_name output is still empty"
+      exit 1
+    fi
+
+    terraform output -raw private_key 2>/dev/null > "${INSTANCE_NAME}.pem" || true
+    chmod 600 "${INSTANCE_NAME}.pem"
+    echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
+
+    echo "Private key exported successfully!"
 
       - name: Upload Private Key Artifact
         uses: actions/upload-artifact@v4
