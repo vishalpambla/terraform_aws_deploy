@@ -11,7 +11,7 @@ availability_zones = ["ap-south-1a", "ap-south-1b"]
 
 instance_name       = "dev-ec2"
 instance_type       = "t3.micro"
-ami                 = "ami-0c91e3f0ba849e5cc"
+ami                 = "ami-0ff91eb5c6fe7cc86"
 key_name            = "dev-ec2-key"
 security_group_name = "dev-ec2-sg"
 env                 = "dev"
