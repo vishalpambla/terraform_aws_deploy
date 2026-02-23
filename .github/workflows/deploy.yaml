@@ -65,7 +65,22 @@ jobs:
       - name: Export Private Key
         working-directory: environment/${{ env.ENV_FOLDER }}
         run: |
-          INSTANCE_NAME=$(terraform output -raw instance_name)
+          set -euo pipefail
+
+          for i in {1..10}; do
+            INSTANCE_NAME=$(terraform output -raw instance_name || true)
+            if [ -n "$INSTANCE_NAME" ]; then
+              break
+            fi
+            echo "Instance name not ready yet. Retrying in 10s..."
+            sleep 5
+          done
+
+          if [ -z "$INSTANCE_NAME" ]; then
+            echo "ERROR: Terraform instance_name output is still empty"
+            exit 1
+          fi
+          
           terraform output -raw private_key > "${INSTANCE_NAME}.pem"
           chmod 600 "${INSTANCE_NAME}.pem"
           echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
