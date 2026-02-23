@@ -35,19 +35,19 @@ jobs:
           terraform_version: latest
 
       - name: Terraform Init
-        working-directory: bootstrap
+        working-directory: environment/${{ github.event.inputs.env }}
         run: terraform init
 
       - name: Terraform Format
-        working-directory: bootstrap
+        working-directory: environment/${{ github.event.inputs.env }}
         run: terraform fmt -check
 
       - name: Terraform Plan
-        working-directory: bootstrap
+        working-directory: environment/${{ github.event.inputs.env }}
         run: terraform plan -var-file=terraform.tfvars -input=false
 
       - name: Terraform Apply
-        working-directory: bootstrap
+        working-directory: environment/${{ github.event.inputs.env }}
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var-file=terraform.tfvars -auto-approve -input=false
 
