@@ -20,19 +20,19 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_ssh_cidr
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_ssh_cidr
   }
 }
 
 resource "aws_instance" "ec2" {
-  ami                    = data.aws_ami.latest_amazon_linux.id
+  ami                    = var.ami
   instance_type          = var.instance_type
   subnet_id              = var.subnet_id
   key_name               = aws_key_pair.generated.key_name
