@@ -71,8 +71,8 @@ jobs:
           echo "Waiting for Terraform outputs..."
 
           INSTANCE_NAME=""
-          for i in {1..10}; do
-            INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null || true)
+          for i in {1..30}; do
+            INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null | tr -d '[:space:]' || true)
             if [ -n "$INSTANCE_NAME" ]; then
               echo "Found instance: $INSTANCE_NAME"
               break
@@ -86,7 +86,7 @@ jobs:
             exit 1
           fi
 
-          terraform output -raw private_key 2>/dev/null > "${INSTANCE_NAME}.pem" || true
+          terraform output -raw private_key 2>/dev/null > "${INSTANCE_NAME}.pem"
           chmod 600 "${INSTANCE_NAME}.pem"
           echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
 
