@@ -68,14 +68,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Reading Terraform outputs via JSON..."
+          echo "Exporting Terraform outputs to file..."
 
-          # Get clean JSON output
-          TF_OUTPUT=$(terraform output -json)
+          # Write clean JSON to file
+          terraform output -json > tf_output.json
 
           # Extract values safely using jq
-          INSTANCE_NAME=$(echo "$TF_OUTPUT" | jq -r '.instance_name.value')
-          PRIVATE_KEY=$(echo "$TF_OUTPUT" | jq -r '.private_key.value')
+          INSTANCE_NAME=$(jq -r '.instance_name.value' tf_output.json)
+          PRIVATE_KEY=$(jq -r '.private_key.value' tf_output.json)
 
           if [ -z "$INSTANCE_NAME" ] || [ "$INSTANCE_NAME" = "null" ]; then
             echo "ERROR: instance_name output is empty"
