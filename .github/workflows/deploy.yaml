@@ -68,25 +68,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Waiting for Terraform outputs..."
+          echo "Reading Terraform outputs via JSON..."
 
-          INSTANCE_NAME=""
-          for i in {1..30}; do
-            INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null | tr -d '[:space:]' || true)
-            if [ -n "$INSTANCE_NAME" ]; then
-              echo "Found instance: $INSTANCE_NAME"
-              break
-            fi
-            echo "Instance name not ready yet. Retrying in 10s..."
-            sleep 10
-          done
+          # Get clean JSON output
+          TF_OUTPUT=$(terraform output -json)
 
-          if [ -z "$INSTANCE_NAME" ]; then
-            echo "ERROR: Terraform instance_name output is still empty"
+          # Extract values safely using jq
+          INSTANCE_NAME=$(echo "$TF_OUTPUT" | jq -r '.instance_name.value')
+          PRIVATE_KEY=$(echo "$TF_OUTPUT" | jq -r '.private_key.value')
+
+          if [ -z "$INSTANCE_NAME" ] || [ "$INSTANCE_NAME" = "null" ]; then
+            echo "ERROR: instance_name output is empty"
             exit 1
           fi
 
-          terraform output -raw private_key 2>/dev/null > "${INSTANCE_NAME}.pem"
+          if [ -z "$PRIVATE_KEY" ] || [ "$PRIVATE_KEY" = "null" ]; then
+            echo "ERROR: private_key output is empty"
+            exit 1
+          fi
+
+          echo "$PRIVATE_KEY" > "${INSTANCE_NAME}.pem"
           chmod 600 "${INSTANCE_NAME}.pem"
           echo "KEY_FILE=${INSTANCE_NAME}.pem" >> $GITHUB_ENV
 
